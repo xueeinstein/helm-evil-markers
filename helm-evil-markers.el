@@ -1,0 +1,91 @@
+;;; helm-evil-markers --- Show evil markers with helm.
+
+;; Copyright (C) 2019 Bill Xue <github.com/xueeinstein>
+;; Author: Bill Xue
+;; URL: https://github.com/xueeinstein/helm-evil-markers
+;; Created: 2019
+;; Version: 0.1
+;; Package-Requires: ((emacs "24.4") (helm "2.0.0"))
+;; Keywords: extensions
+
+;;; Commentary:
+
+;; Evil markers help you jump to specific position easily
+;; but it is easy to forget your markers.
+;; With helm-evil-markers, you can get hints on existing markers.
+;; This file is NOT part of GNU Emacs.
+
+;;; Code:
+(require 'helm)
+(require 'evil)
+
+(defvar helm-evil-markers-alist nil
+  "The alist to record evil markers and corresponding positions.")
+(defvar helm-evil-markers-tick 0
+  "The chars modified tick of current buffer.")
+(defvar helm-evil-markers-buffer-name nil
+  "The active buffer name.")
+
+(defun helm-evil-markers-update-alist ()
+  "Update cached evil markers alist."
+  (setq helm-evil-markers-alist nil)
+  (let ((old-buffer (current-buffer))
+        (markers-alist (copy-alist evil-markers-alist)))
+    (with-temp-buffer
+      (insert-buffer-substring old-buffer)
+      (dolist (element markers-alist)
+        (let* ((code (car element))
+               (char (byte-to-string code))
+               (marker (cdr element)))
+          (if (markerp marker)
+              (let ((pos (marker-position marker)))
+                (goto-char pos)
+                (add-to-list
+                 'helm-evil-markers-alist
+                 (cons (format "%s> %s" char
+                               (replace-regexp-in-string "\n$" "" (thing-at-point 'line)))
+                       pos))))))))
+  (setq helm-evil-markers-tick (buffer-chars-modified-tick))
+  (setq helm-evil-markers-buffer-name (buffer-name)))
+
+(defun helm-evil-markers-list ()
+  "Get candidates as alist."
+  (unless (and (equal helm-evil-markers-buffer-name (buffer-name))
+               (equal helm-evil-markers-tick (buffer-chars-modified-tick)))
+    (helm-evil-markers-update-alist))
+  helm-evil-markers-alist)
+
+(defun helm-evil-markers-sort (candidates source)
+  "Custom sorting for matching CANDIDATES from SOURCE."
+  (let ((pattern helm-pattern))
+    (if (string= pattern "")
+        candidates
+      (sort candidates
+            (lambda (s1 s2)
+              (if (string-prefix-p (format "%s> " pattern) (car s2))
+                  nil
+                t))))))
+
+;;;###autoload
+(defun helm-evil-markers ()
+  "List evil markers with helm."
+  (interactive)
+  (helm :sources (helm-build-sync-source "Evil Markers"
+                   :candidates (helm-evil-markers-list)
+                   :action (lambda (candidate)
+                             (goto-char candidate))
+                   :filtered-candidate-transformer #'helm-evil-markers-sort)
+        :buffer "*helm-evil-markers*"))
+
+;;;###autoload
+(defun helm-evil-markers-set (char &optional pos advance)
+  "Wrapper to set marker denoted by CHAR to position POS and update markers.
+If ADVANCE is t, the marker advances when inserting text at it; otherwise,
+it stays behind."
+  (interactive (list (read-char)))
+  (evil-set-marker char pos advance)
+  (helm-evil-markers-update-alist))
+
+(define-key evil-normal-state-map (kbd "'") 'helm-evil-markers)
+(define-key evil-normal-state-map (kbd "m") 'helm-evil-markers-set)
+;;; helm-evil-markers ends here
