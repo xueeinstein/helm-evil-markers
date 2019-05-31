@@ -88,4 +88,6 @@ it stays behind."
 
 (define-key evil-normal-state-map (kbd "'") 'helm-evil-markers)
 (define-key evil-normal-state-map (kbd "m") 'helm-evil-markers-set)
+
+(provide 'helm-evil-markers)
 ;;; helm-evil-markers ends here
