@@ -1,4 +1,4 @@
-;;; helm-evil-markers --- Show evil markers with helm.
+;;; helm-evil-markers.el --- Show evil markers with helm  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2019 Bill Xue <github.com/xueeinstein>
 ;; Author: Bill Xue
@@ -10,9 +10,8 @@
 
 ;;; Commentary:
 
-;; Evil markers help you jump to specific position easily
-;; but it is easy to forget your markers.
-;; With helm-evil-markers, you can get hints on existing markers.
+;; Helm-evil-markers.el helps you to list evil markers with hints
+;; as helm candidates.
 ;; This file is NOT part of GNU Emacs.
 
 ;;; Code:
@@ -90,4 +89,4 @@ it stays behind."
 (define-key evil-normal-state-map (kbd "m") 'helm-evil-markers-set)
 
 (provide 'helm-evil-markers)
-;;; helm-evil-markers ends here
+;;; helm-evil-markers.el ends here
