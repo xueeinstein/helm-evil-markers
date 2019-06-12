@@ -54,13 +54,13 @@
     (helm-evil-markers-update-alist))
   helm-evil-markers-alist)
 
-(defun helm-evil-markers-sort (candidates source)
+(defun helm-evil-markers-sort (candidates _source)
   "Custom sorting for matching CANDIDATES from SOURCE."
   (let ((pattern helm-pattern))
     (if (string= pattern "")
         candidates
       (sort candidates
-            (lambda (s1 s2)
+            (lambda (_s1 s2)
               (if (string-prefix-p (format "%s> " pattern) (car s2))
                   nil
                 t))))))
