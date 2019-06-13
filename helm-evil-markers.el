@@ -5,7 +5,7 @@
 ;; URL: https://github.com/xueeinstein/helm-evil-markers
 ;; Created: 2019
 ;; Version: 0.1
-;; Package-Requires: ((emacs "24.4") (helm "2.0.0"))
+;; Package-Requires: ((emacs "24.4") (helm "2.0.0") (evil "1.2.10"))
 ;; Keywords: extensions
 
 ;;; Commentary:
