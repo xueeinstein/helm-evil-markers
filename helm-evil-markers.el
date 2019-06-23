@@ -24,26 +24,28 @@
   "The chars modified tick of current buffer.")
 (defvar helm-evil-markers-buffer-name nil
   "The active buffer name.")
+(defvar helm-evil-markers-enabled nil
+  "Record whether evil marker keybindings are reset.")
 
 (defun helm-evil-markers-update-alist ()
   "Update cached evil markers alist."
   (setq helm-evil-markers-alist nil)
-  (let ((old-buffer (current-buffer))
+  (let ((buffer (current-buffer))
         (markers-alist (copy-alist evil-markers-alist)))
-    (with-temp-buffer
-      (insert-buffer-substring old-buffer)
+    (with-current-buffer buffer
       (dolist (element markers-alist)
         (let* ((code (car element))
                (char (byte-to-string code))
                (marker (cdr element)))
           (if (markerp marker)
               (let ((pos (marker-position marker)))
-                (goto-char pos)
-                (add-to-list
-                 'helm-evil-markers-alist
-                 (cons (format "%s> %s" char
-                               (replace-regexp-in-string "\n$" "" (thing-at-point 'line)))
-                       pos))))))))
+                (save-excursion
+                  (goto-char pos)
+                  (add-to-list
+                   'helm-evil-markers-alist
+                   (cons (format "%s> %s" char
+                                 (replace-regexp-in-string "\n$" "" (thing-at-point 'line)))
+                         pos)))))))))
   (setq helm-evil-markers-tick (buffer-chars-modified-tick))
   (setq helm-evil-markers-buffer-name (buffer-name)))
 
@@ -85,8 +87,19 @@ it stays behind."
   (evil-set-marker char pos advance)
   (helm-evil-markers-update-alist))
 
-(define-key evil-normal-state-map (kbd "'") 'helm-evil-markers)
-(define-key evil-normal-state-map (kbd "m") 'helm-evil-markers-set)
+;;;###autoload
+(defun helm-evil-markers-toggle ()
+  "Enable or disable helm-evil-markers keybindings."
+  (interactive)
+  (if helm-evil-markers-enabled
+      (progn
+        (define-key evil-normal-state-map (kbd "'") 'evil-goto-mark-line)
+        (define-key evil-normal-state-map (kbd "m") 'evil-set-marker)
+        (setq helm-evil-markers-enabled nil))
+    (progn
+      (define-key evil-normal-state-map (kbd "'") 'helm-evil-markers)
+      (define-key evil-normal-state-map (kbd "m") 'helm-evil-markers-set)
+      (setq helm-evil-markers-enabled t))))
 
 (provide 'helm-evil-markers)
 ;;; helm-evil-markers.el ends here
