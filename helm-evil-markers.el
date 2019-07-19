@@ -5,7 +5,7 @@
 ;; URL: https://github.com/xueeinstein/helm-evil-markers
 ;; Created: 2019
 ;; Version: 0.1
-;; Package-Requires: ((emacs "24.4") (helm "2.0.0") (evil "1.2.10"))
+;; Package-Requires: ((emacs "25.1") (helm "2.0.0") (evil "1.2.10"))
 ;; Keywords: extensions
 
 ;;; Commentary:
@@ -20,12 +20,22 @@
 
 (defvar helm-evil-markers-alist nil
   "The alist to record evil markers and corresponding positions.")
+(defvar helm-evil-markers-global-markers-hints nil
+  "The alist to cache hints for evil global markers.")
 (defvar helm-evil-markers-tick 0
   "The chars modified tick of current buffer.")
 (defvar helm-evil-markers-buffer-name nil
   "The active buffer name.")
 (defvar helm-evil-markers-enabled nil
   "Record whether evil marker keybindings are reset.")
+(defvar helm-evil-markers-hint-max-length 60
+  "Maximum length of hint text.")
+
+(defun helm-evil-markers-get-hint ()
+  "Get hint text."
+  (truncate-string-to-width
+   (replace-regexp-in-string "\n$" "" (thing-at-point 'line))
+   helm-evil-markers-hint-max-length))
 
 (defun helm-evil-markers-update-alist ()
   "Update cached evil markers alist."
@@ -37,15 +47,27 @@
         (let* ((code (car element))
                (char (byte-to-string code))
                (marker (cdr element)))
-          (if (markerp marker)
-              (let ((pos (marker-position marker)))
+          (cond
+           ((and (markerp marker)
+                 (not (evil-global-marker-p code)))
+            (save-excursion
+              (goto-char (marker-position marker))
+              (add-to-list
+               'helm-evil-markers-alist
+               (cons (format "%s> %s" char (helm-evil-markers-get-hint))
+                     marker))))
+           ((and (markerp marker)
+                 (evil-global-marker-p code))
+            (if (equal buffer (marker-buffer marker))
                 (save-excursion
-                  (goto-char pos)
-                  (add-to-list
-                   'helm-evil-markers-alist
-                   (cons (format "%s> %s" char
-                                 (replace-regexp-in-string "\n$" "" (thing-at-point 'line)))
-                         pos)))))))))
+                  (goto-char (marker-position marker))
+                  (setf (alist-get code helm-evil-markers-global-markers-hints)
+                        (helm-evil-markers-get-hint))))
+            (add-to-list
+             'helm-evil-markers-alist
+             (cons (format "%s> %s\n%s" char (buffer-name (marker-buffer marker))
+                           (alist-get code helm-evil-markers-global-markers-hints))
+                   marker))))))))
   (setq helm-evil-markers-tick (buffer-chars-modified-tick))
   (setq helm-evil-markers-buffer-name (buffer-name)))
 
@@ -73,8 +95,9 @@
   (interactive)
   (helm :sources (helm-build-sync-source "Evil Markers"
                    :candidates (helm-evil-markers-list)
-                   :action (lambda (candidate)
-                             (goto-char candidate))
+                   :action (lambda (marker)
+                             (progn (switch-to-buffer (marker-buffer marker))
+                                    (goto-char (marker-position marker))))
                    :filtered-candidate-transformer #'helm-evil-markers-sort)
         :buffer "*helm-evil-markers*"))
 
