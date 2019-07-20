@@ -1,5 +1,6 @@
 # helm-evil-markers
 [![MELPA](https://melpa.org/packages/helm-evil-markers-badge.svg)](https://melpa.org/#/helm-evil-markers)
+[![MELPA Stable](https://stable.melpa.org/packages/helm-evil-markers-badge.svg)](https://stable.melpa.org/#/helm-evil-markers)
 
 Show evil markers list with helm.
 
@@ -28,3 +29,6 @@ Or you can manually enable or disable `helm-evil-markers` by executing `M-x helm
 Finally, you can use the Evil keybindings `m-*` and `'-*` to set and get marker. See demo:
 
 ![demo](demo.gif)
+
+Note that `helm-evil-markers` supports **evil global markers** (marked with captical letters) to switch
+between buffers.
