@@ -32,3 +32,7 @@ Finally, you can use the Evil keybindings `m-*` and `'-*` to set and get marker.
 
 Note that `helm-evil-markers` supports **evil global markers** (marked with captical letters) to switch
 between buffers.
+
+## Customization
+
+If you would like to exclude particular mark letters from selection menu, you may add them to the `helm-evil-markers-exclude-marks`. By default this list will contain `^`, `[`, `]` special marks. Also exclusion is disabled by default, to use exclusion rules, you need to set `helm-evil-markers-exclusion-enabled` to a non-nil value beforehand.

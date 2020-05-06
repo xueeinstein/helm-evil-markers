@@ -37,6 +37,16 @@
    (replace-regexp-in-string "\n$" "" (thing-at-point 'line))
    helm-evil-markers-hint-max-length))
 
+(defcustom helm-evil-markers-exclusion-enabled nil
+  "Whether to use helm-evil-markers-exclude-marks to filter out marker list."
+  :type 'boolean
+  :group 'helm-evil-markers)
+
+(defcustom helm-evil-markers-exclude-marks '("^" "[" "]")
+  "Marks which should not be displayed on selection menu."
+  :type '(repeat string)
+  :group 'helm-evil-markers)
+
 (defun helm-evil-markers-update-alist ()
   "Update cached evil markers alist."
   (setq helm-evil-markers-alist nil)
@@ -76,7 +86,12 @@
   (unless (and (equal helm-evil-markers-buffer-name (buffer-name))
                (equal helm-evil-markers-tick (buffer-chars-modified-tick)))
     (helm-evil-markers-update-alist))
-  helm-evil-markers-alist)
+  (if helm-evil-markers-exclusion-enabled
+      (seq-filter
+       (lambda (str)
+         (not (member (substring (car str) 0 1) helm-evil-markers-exclude-marks)))
+       helm-evil-markers-alist)
+    helm-evil-markers-alist))
 
 (defun helm-evil-markers-sort (candidates _source)
   "Custom sorting for matching CANDIDATES from SOURCE."
